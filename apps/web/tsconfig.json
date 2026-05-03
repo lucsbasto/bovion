@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "ES2022"],
+    "jsx": "preserve",
+    "noEmit": true,
+    "plugins": [{ "name": "next" }],
+    "paths": {
+      "@/*": ["./*"],
+      "@bovion/db": ["../../packages/db/src/index.ts"],
+      "@bovion/db/*": ["../../packages/db/src/*"],
+      "@bovion/emails": ["../../packages/emails/src/index.ts"],
+      "@bovion/emails/*": ["../../packages/emails/src/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"]
+}

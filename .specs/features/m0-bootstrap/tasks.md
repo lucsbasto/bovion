@@ -67,7 +67,7 @@ Tasks dentro de BOOT-NN são sequenciais salvo notado. BOOT-08 ‖ BOOT-02 (para
 
 ### BOOT-01-T05: apps/web Next.js bootstrap
 **Depends:** T01, T02, T03
-**Files:** `apps/web/package.json`, `apps/web/tsconfig.json`, `apps/web/next.config.ts`, `apps/web/app/layout.tsx`, `apps/web/app/(marketing)/page.tsx`, `apps/web/app/globals.css`, `apps/web/postcss.config.mjs`, `apps/web/middleware.ts`, `apps/web/public/.gitkeep`
+**Files:** `apps/web/package.json`, `apps/web/tsconfig.json`, `apps/web/next.config.ts`, `apps/web/app/layout.tsx`, `apps/web/app/(marketing)/page.tsx`, `apps/web/app/globals.css`, `apps/web/postcss.config.mjs`, `apps/web/proxy.ts` (Next 16 renamed `middleware.ts`), `apps/web/public/.gitkeep`
 **Steps:**
 - `apps/web/package.json`: deps `next@^16.2.4`, `react@^19.2.5`, `react-dom@^19.2.5`, `zod@^4.4.2`. devDeps `@types/node`, `@types/react`, `@types/react-dom`, `typescript@^6.0.3`, `tailwindcss@latest`, `@tailwindcss/postcss`. scripts: `dev`, `build`, `start`, `lint`, `typecheck`.
 - `tsconfig.json` extend base + paths `@/*`, `@bovion/db`, `@bovion/emails`.
@@ -75,7 +75,7 @@ Tasks dentro de BOOT-NN são sequenciais salvo notado. BOOT-08 ‖ BOOT-02 (para
 - `app/layout.tsx`: html/body wrapper PT-BR (`<html lang="pt-BR">`).
 - `app/(marketing)/page.tsx`: landing "Em construção" — botão health vem em BOOT-07.
 - `globals.css`: tailwind imports.
-- `middleware.ts`: passthrough `export function middleware() { return NextResponse.next() }`.
+- `proxy.ts`: passthrough `export function proxy() { return NextResponse.next() }` (Next 16 renamed `middleware.ts` → `proxy.ts`, function `middleware` → `proxy`).
 **Verify:** `pnpm install`. `pnpm --filter web dev` sobe na :3000 — abrir browser, ver landing. Ctrl+C.
 **Commit:** `feat(web): scaffold Next.js 16 app with marketing landing`
 **Maps to AC:** BOOT-01:AC4, BOOT-01:AC5
