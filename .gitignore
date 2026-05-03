@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Tooling state (session-local, not for VCS)
+.remember/
+.omc/
+.claude/settings.local.json
+.claude/worktrees/
+
+# Test/coverage
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# Drizzle
+drizzle/.snapshot/
+
+# Vercel
+.vercel/
