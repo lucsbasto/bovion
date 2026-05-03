@@ -1,26 +1,27 @@
 # State
 
-**Updated:** 2026-05-03 (M0 execução 18/32 tasks done — BOOT-01/02/04/08 completos, CI minimal verde, paused)
+**Updated:** 2026-05-03 (M0 execução 22/32 tasks done — BOOT-01/02/03/04/08 completos, CI verde, ruleset main ativo, PR #1 merged)
 
 ## NEXT STEP
 
 > **Single source of truth pra "o que faço agora?".** Atualiza ao fim de cada task/sessão. Lê PRIMEIRO antes de qualquer trabalho.
 
-**Task:** Branch protection rule (manual) + BOOT-03-T01 (auth env validator + Better Auth install)
+**Task:** BOOT-07-T01 (health endpoint `/api/health` com DB check) + BOOT-07-T02 (landing health button)
 
-**Por quê:** CI já roda verde mas main não exige `ci` check passing — qualquer push direto bypassa. BOOT-03 desbloqueia chain BOOT-07 (health) → BOOT-06-FULL (CI completa) → deploy.
+**Por quê:** BOOT-07-T01 desbloqueia BOOT-06-FULL (CI completa: postgres service + db:migrate + build) e validação real do Vercel preview deploy. Health endpoint = base monitoring + smoke test pós-deploy. T02 valida ponta-a-ponta visual (browser → fetch → DB).
 
 **Como começar:**
-1. Manual GitHub UI (~2min): repo → Settings → Branches → Add rule `main`: require PR + require `ci` status check + block force push
-2. Em paralelo, comando aqui:
+1. Garantir Postgres up: `docker compose up -d` (`pg_isready` na 5433)
+2. Garantir `apps/web/.env.local` (DATABASE_URL + BETTER_AUTH_SECRET via `openssl rand -base64 32`)
+3. Comando aqui:
    ```
-   continuar M0 — spawn BOOT-03 executor
+   continuar M0 — BOOT-07 chain
    ```
-   Spawn 1 executor agent sonnet, isolation worktree, 4 tasks sequenciais (T01 env+install → T02 instance+org plugin → T03 catch-all route → T04 schema gen+seed real). Verify command per task. ~4 commits atomicos.
+   1 executor sonnet, isolation worktree, 2 tasks sequenciais. T01: route handler `runtime nodejs` + `force-dynamic` + `db.execute(sql\`SELECT 1\`)` → `{ ok, db, commit, timestamp }` 200 ou 503. T02: client component botão fetch `/api/health` → `<pre>{json}</pre>` (page mantém SSG). Verify per task: T01 curl + Postgres down → 503; T02 browser :3000 click. ~2 commits atomicos via PR (ruleset main ativo).
 
-**Bloqueador anterior:** Nenhum (Docker installed, CI verde, lock consolidado).
+**Bloqueador anterior:** Nenhum (BOOT-03 done via PR #1, ruleset main ativo, Vercel root dir = `apps/web` corrigido).
 
-**Após NEXT STEP done:** atualizar este bloco pra "BOOT-07-T01 health endpoint" (próxima dependência).
+**Após NEXT STEP done:** atualizar este bloco pra "BOOT-06-T01-FULL CI completa (postgres service + db:migrate + build)" + "BOOT-05-T02..T04 deploy chain (DNS bovion.com.br, env Vercel prod, smoke test)".
 
 ## Decisions
 
