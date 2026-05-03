@@ -1,6 +1,6 @@
 # State
 
-**Updated:** 2026-05-03 (M0 design.md gerado via Context7 MCP — pronto pra fase Tasks)
+**Updated:** 2026-05-03 (M0 execução 18/32 tasks done — BOOT-01/02/04/08 completos, CI minimal verde, paused)
 
 ## Decisions
 
@@ -27,32 +27,62 @@
 - **2026-05-03 · EMAIL_FROM 3 modos:** dev sem `RESEND_API_KEY` = console.log; dev/preview com key = `onboarding@resend.dev` (sandbox Resend, sem DNS); prod = `no-reply@bovion.com.br` (após DKIM/SPF em BOOT-05). `.env.example` default sandbox.
 - **2026-05-03 · Pin sempre latest npm:** Mandate user. Bovion bump tudo pra latest: Next 16.2.4, React 19.2.5, TS 6.0.3, Biome 2.4.14, Turbo 2.9.7, Drizzle ORM 0.45.2 + Kit 0.31.10, Better Auth 1.6.9, Resend 6.12.2, Zod 4.4.2, lint-staged 16.4.0. *Why:* greenfield, sem legacy. Patterns API verificados via Context7 — sem breaking change que afete M0.
 - **2026-05-03 · M0 Verification Plan completo:** 5/5 checks passaram (Better Auth schema, drizzle-kit defineConfig, Resend react prop, GH Actions postgres port, Vercel ignoreCommand). Ver `.specs/features/m0-bootstrap/design.md` sec final.
+- **2026-05-03 · @better-auth/cli pinned ^1.4.21:** Design.md dizia 1.6.9 mas npm registry max é 1.4.21. Bump quando releases vier.
+- **2026-05-03 · Biome 2.x usa `experimentalScannerIgnores` + `vcs.useIgnoreFile`:** Design.md tinha `files.ignore` (Biome 1.x sintaxe), removido em 2.x. `biome.json` final usa scanner ignores pra `migrations/` + lê `.gitignore` automático.
+- **2026-05-03 · CI Node 24 + pnpm 10.33.2:** Design.md outdated (9 + 22). Workflow força Node 24 runtime via `env: FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true` (silencia deprecation warning até June 2026 quando vira default).
+- **2026-05-03 · BOOT-06-T01 split em PARTIAL+FULL:** Minimal CI (lint+typecheck+test) shipped antes de BOOT-03 pra catch regressions early. FULL version (postgres service + db:migrate + build) entra após BOOT-07 (health endpoint precisa existir pra build não falhar em env validator missing).
+- **2026-05-03 · Git remote SSH > HTTPS:** GitHub OAuth token padrão (gh auth login default) NÃO inclui `workflow` scope. Push de `.github/workflows/*` rejeitado via HTTPS. Switched origin pra `git@github.com:lucsbasto/bovion.git` (SSH key já configurada via `admin:public_key` scope).
 - **2026-05-03 · Resend deferred → M6 Go-Live:** `packages/emails` em M0..M5 é wrapper console-only (`sendEmail` imprime payload + retorna `{ id: 'console-noop-<uuid>' }`). React Email templates previewáveis local via `react-email` dev. Resend SDK install + `RESEND_API_KEY` env + SPF/DKIM em `bovion.com.br` entram só em M6 spec EMAIL-PROVIDER. *Why:* usuários pré-MVP são internos, email real não é bloqueador. Better Auth `requireEmailVerification: false` até M6. Interface `sendEmail()` estável — swap stub→Resend zero-impact em callers.
 
 ## Blockers
 
-- **Docker não instalado no host (2026-05-03):** `docker compose -f docker-compose.postgres.yml up -d` não pode rodar até user instalar Docker Desktop / Engine. Bloqueia verify runtime de BOOT-01-T04 (postgres healthcheck), BOOT-02-T05 (drizzle migrate local), BOOT-03-T03+ (auth route smoke test contra DB). Workaround: continuar com tasks que não tocam DB; docker fica blocker pra primeiro verify ponta-a-ponta. Install: `curl -fsSL https://get.docker.com | sh` (Linux) ou Docker Desktop (mac/win).
+(none — Docker installed 2026-05-03)
 
-## Session Handoff (2026-05-03 fim)
+## Session Handoff (2026-05-03 fim execução parcial)
 
-**Última ação:** `.specs/features/m0-bootstrap/design.md` (~794 linhas) gerado e validado via Context7 MCP. Cobre: arch mermaid (dev/CI/prod), components (AuthModule + DB client + Email wrapper + Health endpoint + Env validator), schemas (Better Auth core + organization plugin + farms/farm_settings esqueleto), config files verbatim (turbo.json `tasks` key, drizzle.config.ts `defineConfig`, vercel.json `crons`/redirects, docker-compose.postgres.yml :5433, .github/workflows/ci.yml com Postgres service, biome.json, tsconfig strict), 12 tradeoffs, error handling matrix, Open Questions (4) + Verification Plan (5 checks).
+**Done hoje (18/32 M0 tasks + extras):**
+- BOOT-01 (5/5) ✓ — workspace root, turbo, tsconfig, postgres compose, apps/web Next 16
+- BOOT-08 (4/4) ✓ — biome, husky+lint-staged, vitest, typecheck (Lane A executor sonnet)
+- BOOT-02 (5/5) ✓ — @bovion/db skeleton, drizzle config, farms/farm_settings schemas, client+migrate+seed scripts, init_farms migration applied (Lane B executor sonnet)
+- BOOT-04 (3/3) ✓ — @bovion/emails skeleton, sendEmail console stub, 3 React Email PT-BR templates (Lane C executor sonnet)
+- BOOT-05-T01 ✓ — vercel.json (inline)
+- BOOT-06-T01-PARTIAL ✓ — minimal CI (lint+typecheck+test, NO postgres/migrate/build yet) green em primeiro run, force Node 24 runtime (env `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true`)
+- Extras: ui-references/ (13 PNGs bovion.com.br) commited, .playwright-cli/ ignored, remote switched HTTPS→SSH (token sem workflow scope)
 
-**Próximo passo ao reabrir:**
-1. Phase 4 Execute — começar BOOT-01-T01 (workspace root scaffold)
-2. Worktree pattern per task: `git worktree add .claude/worktrees/boot-01-t01 -b boot/01-t01`
-3. Seguir `tasks.md` em ordem: BOOT-01 → (BOOT-08 ‖ BOOT-02) → BOOT-03 → BOOT-04 → BOOT-07 → (BOOT-06 ‖ BOOT-05) → EPILOGUE
-4. Cada task: editar files → verify command → commit Conventional Commits → merge → próxima
+**Estratégia execução validada:** 3 executor sonnet em paralelo via `isolation: worktree`, cherry-pick `-X theirs` pra resolver pnpm-lock.yaml conflicts, `pnpm install` final regenera lock consolidado. ~177k tokens total (vs ~600k+ se opus).
+
+**Drifts vs design.md (notar):**
+- `@better-auth/cli` pinned `^1.4.21` (1.6.9 não existe npm)
+- Biome 2.x dropped `files.ignore` → usado `experimentalScannerIgnores` + `vcs.useIgnoreFile`
+- CI pnpm 10.33.2 + node 24 (design dizia 9 + 22 — outdated)
+- 2 lint warnings remaining: `process.env.DATABASE_URL!` non-null assertion em `packages/db/drizzle.config.ts:7` — substituir por zod parse em BOOT-03-T01
+
+**Próximo passo ao reabrir (ordem ótima):**
+1. Branch protection (manual GitHub UI): Settings→Branches→protect `main`, require `ci` check passing, require PR before merge, block force push
+2. BOOT-03 chain (auth) — 4 tasks sequenciais. Spawn 1 executor sonnet OR fazer inline:
+   - T01 env validator (zod) + Better Auth install + .env.example
+   - T02 Better Auth instance + organization plugin (plural modelName)
+   - T03 catch-all route handler `/api/auth/[...all]`
+   - T04 `pnpm auth:generate` schema + migration + seed real (1 user/org/member/farm)
+3. BOOT-07 (health endpoint + button) 2 tasks
+4. BOOT-06-T01-FULL (expandir CI: postgres service + db:migrate + build) + T02 protection + T03 dependabot — paralelo
+5. BOOT-05-T02 (Vercel link) + T03 (DNS bovion.com.br) + T04 (prod smoke) — manual paralelo
+6. EPILOGUE T01 README + T02 STATE handoff M0→M1
 
 **Comandos pra retomar:**
 ```
 cd /home/lucas/bovion
 claude
-# diga: "executar BOOT-01-T01" ou "começar M0 execução"
+# diga: "continuar M0 — BOOT-03 chain" ou "spawn BOOT-03 executor"
 ```
 
 ## Lessons
 
-(none yet)
+- **Parallel executor agents w/ isolation worktree = winning pattern** (2026-05-03): 3 sonnet executors em paralelo (BOOT-08/02/04) finalizaram em ~10min, ~177k tokens. Lock conflicts resolved via cherry-pick `-X theirs` + final `pnpm install`. Convention: 1 spec = 1 lane = 1 executor agent. Atomic commits preserved (12 commits, não squashed). Worktrees auto-cleanup if no changes; force-remove (`-f -f`) if agent process holds lock.
+- **Verbatim design.md commands warrant version sanity check**: Lane B agent caught `@better-auth/cli@1.6.9` doesn't exist npm (latest 1.4.21). Lane A caught Biome 2.x removed `files.ignore` (need `experimentalScannerIgnores`). Design.md drifts inevitable — agent should `npm view <pkg> version` + verify config schema, not blindly verbatim.
+- **Husky pre-commit cobre só lint/format** (lint-staged + biome). Typecheck + test ficam em CI. Don't try to put slow checks no pre-commit (devs vão `--no-verify`). CI gate é fonte verdade.
+- **GitHub OAuth token tem scope granular**: token padrão (repo, gist, read:org) NÃO inclui `workflow`. Push de `.github/workflows/*` rejeitado. Fix: `git remote set-url origin git@...` (SSH bypassa) OU `gh auth refresh -h github.com -s workflow`.
+- **Node 20 actions deprecation**: GitHub Actions migra default pra Node 24 em June 2026. Set `env: FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true` workflow-level pra silenciar warning + future-proof.
 
 ## Todos
 
@@ -61,15 +91,18 @@ claude
 - [x] M0: 4 Open Questions resolvidas (modelName plural, auth:generate fora CI, seed mínimo, EMAIL_FROM 3 modos)
 - [x] M0: Verification Plan completo (5/5 checks) + bump tudo pra latest (Next 16, Drizzle 0.45, Resend 6, Zod 4 etc)
 - [x] M0: Tasks phase (`.specs/features/m0-bootstrap/tasks.md` — 32 tasks atômicas em 8 specs + 2 epilogue, dependency graph + verify command per task + commit msg preview)
-- [ ] M0: Execute BOOT-01-T01 (workspace root scaffold) → primeiro commit
-- [ ] M0: Execute BOOT-01 monorepo
-- [ ] M0: Execute BOOT-02 database
-- [ ] M0: Execute BOOT-03 Better Auth
-- [ ] M0: Execute BOOT-04 email
-- [ ] M0: Execute BOOT-05 deploy + domínio bovion.com.br
-- [ ] M0: Execute BOOT-06 CI
-- [ ] M0: Execute BOOT-07 health endpoint
-- [ ] M0: Execute BOOT-08 tooling
+- [x] M0: Execute BOOT-01 monorepo (5/5 tasks)
+- [x] M0: Execute BOOT-02 database (5/5 tasks — drizzle schemas + farms migration applied)
+- [x] M0: Execute BOOT-04 email (3/3 tasks — stub + 3 templates PT-BR)
+- [x] M0: Execute BOOT-08 tooling (4/4 tasks — biome + husky + vitest + typecheck)
+- [x] M0: Execute BOOT-05-T01 (vercel.json)
+- [x] M0: Execute BOOT-06-T01-PARTIAL (CI minimal lint+typecheck+test, sem postgres ainda)
+- [ ] M0: Branch protection rule (manual GitHub UI) — require `ci` check passing on `main`
+- [ ] M0: Execute BOOT-03 Better Auth (4 tasks)
+- [ ] M0: Execute BOOT-07 health endpoint (2 tasks — depende BOOT-03)
+- [ ] M0: Execute BOOT-06-T01-FULL (expandir CI com postgres + db:migrate + build) + T02 + T03
+- [ ] M0: Execute BOOT-05 deploy completo (T02 link Vercel + T03 DNS bovion.com.br + T04 prod smoke)
+- [ ] M0: EPILOGUE T01 README polish + T02 STATE M0→M1 handoff
 - [ ] M1: Specify AUTH-001 (login Better Auth + session cookie)
 
 ## Deferred
