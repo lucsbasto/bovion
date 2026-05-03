@@ -8,6 +8,13 @@
       "when": 1777774137600,
       "tag": "0000_init_farms",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1777815355742,
+      "tag": "0001_auth",
+      "breakpoints": true
     }
   ]
 }

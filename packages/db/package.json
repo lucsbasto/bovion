@@ -12,7 +12,7 @@
     "push": "drizzle-kit push",
     "migrate": "tsx scripts/migrate.ts",
     "studio": "drizzle-kit studio",
-    "seed": "tsx scripts/seed.ts",
+    "seed": "tsx --tsconfig ../../apps/web/tsconfig.json scripts/seed.ts",
     "auth:generate": "better-auth generate --output ./src/schema/auth.ts --config ../../apps/web/server/auth.ts --yes",
     "typecheck": "tsc --noEmit"
   },
