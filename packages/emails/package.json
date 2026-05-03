@@ -1,0 +1,24 @@
+{
+  "name": "@bovion/emails",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./send": "./src/send.ts",
+    "./templates/*": "./src/templates/*.tsx"
+  },
+  "scripts": {
+    "preview": "email dev --port 3001 --dir ./src/templates",
+    "lint": "biome check .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@react-email/components": "^1.0.12",
+    "react": "^19.2.5"
+  },
+  "devDependencies": {
+    "react-email": "^4.0.0",
+    "typescript": "^6.0.3"
+  }
+}
