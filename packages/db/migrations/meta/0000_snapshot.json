@@ -117,12 +117,8 @@
           "name": "farms_organization_id_organizations_id_fk",
           "tableFrom": "farms",
           "tableTo": "organizations",
-          "columnsFrom": [
-            "organization_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["organization_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -171,12 +167,8 @@
           "name": "farm_settings_farm_id_farms_id_fk",
           "tableFrom": "farm_settings",
           "tableTo": "farms",
-          "columnsFrom": [
-            "farm_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["farm_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

@@ -1,4 +1,4 @@
-import { pgTable, integer, uuid, timestamp } from "drizzle-orm/pg-core";
+import { integer, pgTable, timestamp, uuid } from "drizzle-orm/pg-core";
 import { farms } from "./farms";
 
 export const farmSettings = pgTable("farm_settings", {
