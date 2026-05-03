@@ -1,27 +1,32 @@
 # State
 
-**Updated:** 2026-05-03 (M0 execução 22/32 tasks done — BOOT-01/02/03/04/08 completos, CI verde, ruleset main ativo, PR #1 merged)
+**Updated:** 2026-05-03 (M0 execução 24/32 tasks done — BOOT-01/02/03/04/07/08 completos, CI verde, Vercel preview deploy verde, ruleset main ativo, PRs #1/#5/#8 merged)
 
 ## NEXT STEP
 
 > **Single source of truth pra "o que faço agora?".** Atualiza ao fim de cada task/sessão. Lê PRIMEIRO antes de qualquer trabalho.
 
-**Task:** BOOT-07-T01 (health endpoint `/api/health` com DB check) + BOOT-07-T02 (landing health button)
+**Task:** BOOT-06-T01-FULL (CI completa: postgres service + db:migrate + build) + BOOT-05-T02..T04 (deploy chain real)
 
-**Por quê:** BOOT-07-T01 desbloqueia BOOT-06-FULL (CI completa: postgres service + db:migrate + build) e validação real do Vercel preview deploy. Health endpoint = base monitoring + smoke test pós-deploy. T02 valida ponta-a-ponta visual (browser → fetch → DB).
+**Por quê:** Vercel preview deploy verde com env vars placeholder (DATABASE_URL/BETTER_AUTH_SECRET/BETTER_AUTH_URL/APP_URL). `/api/health` no preview retorna 503 (DB unreachable). BOOT-05 swap pra Supabase real desbloqueia health 200 + cron + prod URL. BOOT-06-FULL adiciona postgres service container + `pnpm db:migrate` no CI pra catch migration drift antes de prod.
 
 **Como começar:**
-1. Garantir Postgres up: `docker compose up -d` (`pg_isready` na 5433)
-2. Garantir `apps/web/.env.local` (DATABASE_URL + BETTER_AUTH_SECRET via `openssl rand -base64 32`)
-3. Comando aqui:
+1. Provisionar Supabase project free-tier (`bovion-prod`) → copiar connection string
+2. Comando aqui:
    ```
-   continuar M0 — BOOT-07 chain
+   continuar M0 — BOOT-05/06 deploy + CI completa
    ```
-   1 executor sonnet, isolation worktree, 2 tasks sequenciais. T01: route handler `runtime nodejs` + `force-dynamic` + `db.execute(sql\`SELECT 1\`)` → `{ ok, db, commit, timestamp }` 200 ou 503. T02: client component botão fetch `/api/health` → `<pre>{json}</pre>` (page mantém SSG). Verify per task: T01 curl + Postgres down → 503; T02 browser :3000 click. ~2 commits atomicos via PR (ruleset main ativo).
+   2 executor lanes paralelos:
+   - **Lane A — BOOT-06-T01-FULL:** Editar `.github/workflows/ci.yml` adicionar `services: postgres:16-alpine` + step `pnpm db:migrate` + `pnpm build` (env vars dummy CI-side). Verify: PR test branch → CI green com postgres service rodando.
+   - **Lane B — BOOT-05-T02..T04:**
+     - T02 (Vercel env prod): swap 4 placeholders (DATABASE_URL → Supabase prod, BETTER_AUTH_URL/APP_URL → `https://bovion.com.br`, BETTER_AUTH_SECRET fresh)
+     - T03 (DNS bovion.com.br): apontar apex/www pra projeto `bovion` (não `bovium` legacy Vite)
+     - T04 (smoke test prod): `curl https://bovion.com.br/api/health` → 200 `{ ok: true, db: 'connected', commit: '<sha7>' }`
+   ~3-4 commits via 2 PRs paralelos (ruleset main ativo).
 
-**Bloqueador anterior:** Nenhum (BOOT-03 done via PR #1, ruleset main ativo, Vercel root dir = `apps/web` corrigido).
+**Bloqueador anterior:** Nenhum (BOOT-07 done via PR #5, vercel infra fix via PR #8, Vercel project Root Directory = `apps/web` + framework=nextjs corrigido via API, turbo.json globalEnv whitelist).
 
-**Após NEXT STEP done:** atualizar este bloco pra "BOOT-06-T01-FULL CI completa (postgres service + db:migrate + build)" + "BOOT-05-T02..T04 deploy chain (DNS bovion.com.br, env Vercel prod, smoke test)".
+**Após NEXT STEP done:** atualizar este bloco pra "BOOT-06-T03 dependabot + EPILOGUE-T01/T02 (README polish + handoff M0→M1 AUTH-001)".
 
 ## Decisions
 
@@ -54,6 +59,10 @@
 - **2026-05-03 · BOOT-06-T01 split em PARTIAL+FULL:** Minimal CI (lint+typecheck+test) shipped antes de BOOT-03 pra catch regressions early. FULL version (postgres service + db:migrate + build) entra após BOOT-07 (health endpoint precisa existir pra build não falhar em env validator missing).
 - **2026-05-03 · Git remote SSH > HTTPS:** GitHub OAuth token padrão (gh auth login default) NÃO inclui `workflow` scope. Push de `.github/workflows/*` rejeitado via HTTPS. Switched origin pra `git@github.com:lucsbasto/bovion.git` (SSH key já configurada via `admin:public_key` scope).
 - **2026-05-03 · Resend deferred → M6 Go-Live:** `packages/emails` em M0..M5 é wrapper console-only (`sendEmail` imprime payload + retorna `{ id: 'console-noop-<uuid>' }`). React Email templates previewáveis local via `react-email` dev. Resend SDK install + `RESEND_API_KEY` env + SPF/DKIM em `bovion.com.br` entram só em M6 spec EMAIL-PROVIDER. *Why:* usuários pré-MVP são internos, email real não é bloqueador. Better Auth `requireEmailVerification: false` até M6. Interface `sendEmail()` estável — swap stub→Resend zero-impact em callers.
+- **2026-05-03 · Vercel project Root Directory = `apps/web` + framework `nextjs`:** Setado via Vercel REST API (`PATCH /v9/projects/{id}`). Sem isso, build no monorepo procurava `next` em `package.json` da raiz e falhava com "No Next.js version detected". *Why:* projeto Vercel `bovion` (criado 02 May, GitHub-linked) tinha Root Dir = `.` e Framework Preset = `Other`. STATE.md anterior dizia "Vercel root → apps/web fixed" mas settings reais não refletiam. *Trade-off:* projeto `bovium` (legacy Vite, criado 08 Feb) ainda detém `bovion.com.br` — BOOT-05-T03 transfere domínio pra `bovion` ou deleta `bovium`.
+- **2026-05-03 · Vercel preview env: 4 placeholders:** DATABASE_URL/BETTER_AUTH_SECRET/BETTER_AUTH_URL/APP_URL setados em Vercel project com valores fake (placeholder Supabase URL, dummy preview URL). Build passa, `/api/health` retorna 503 no preview (DB unreachable), outras rotas auth 500. *Why:* env validator zod (BOOT-03) é safeParse + throw no module load, build collect-page-data falha sem todos vars presentes. Supabase real ainda não provisionado (BOOT-05). *Trade-off:* preview deploy não exercita DB real até BOOT-05; aceitável pois /api/health 503 é comportamento documentado em design.md L741.
+- **2026-05-03 · `vercel.json` em `apps/web/`, não raiz:** Com Root Directory = `apps/web`, Vercel ignora vercel.json da raiz parcialmente (lê configs de keys mas cwd quebra paths). Movido pra `apps/web/vercel.json` (PR #8). Schema mínimo: `redirects` + `crons`. Removido `framework`/`buildCommand`/`installCommand` (sourced do project settings + auto-detect Next.js). Removido `ignoreCommand` (path `./apps/web` quebra sob cwd `apps/web`; turbo-ignore considerado pra futuro se rebuild noise virar problema).
+- **2026-05-03 · `turbo.json` `globalEnv` whitelist obrigatório:** Turbo strict mode strips Vercel platform env vars antes de passar pra tasks. Adicionado `globalEnv: [NODE_ENV, DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL, APP_URL, GIT_COMMIT_SHA, VERCEL_GIT_COMMIT_SHA]` (PR #8). *Why:* sem whitelist, build falha com "Invalid env: ... received undefined" mesmo com vars setadas no Vercel. Warning de Turbo aponta caminho: "missing from turbo.json" → "WILL NOT be available to your application".
 
 ## Blockers
 
