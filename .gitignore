@@ -34,6 +34,7 @@ Thumbs.db
 .omc/
 .claude/settings.local.json
 .claude/worktrees/
+.claude/*.lock
 .playwright-cli/
 
 # Test/coverage
