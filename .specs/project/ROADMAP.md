@@ -38,10 +38,11 @@
 - Helper `await auth.api.getSession({ headers: headers() })` em Server Components
 - Roles customizadas: owner/admin/manager/viewer (PRD sec 11.3)
 
-**Email Infra** - PLANNED
-- Resend SDK em `packages/emails`
-- Template base com React Email
-- Helper `sendEmail({ to, subject, react })`
+**Email Infra (stub-only em M0)** - PLANNED
+- `packages/emails` wrapper console-only (`sendEmail` imprime payload no `console.info`)
+- React Email templates + preview server local (`react-email` dev)
+- Sem Resend SDK, sem `RESEND_API_KEY`
+- Resend backend → **M6 Go-Live** (spec EMAIL-PROVIDER)
 
 **CI/CD** - PLANNED
 - GitHub Actions: lint + typecheck + test + build + drizzle migrate dry-run
@@ -215,7 +216,8 @@
 - Upgrade Vercel Hobby → Pro ($20/mês)
 - Domínio custom + DNS
 - Política de privacidade + termos
-- Onboarding email sequence (Resend)
+- **EMAIL-PROVIDER spec** — instalar Resend SDK em `packages/emails`, adicionar `RESEND_API_KEY` + `EMAIL_FROM` env, configurar SPF/DKIM em `bovion.com.br`, swap stub `sendEmail` → `resend.emails.send`, flip Better Auth `requireEmailVerification: true` + `sendOnSignUp: true`
+- Onboarding email sequence (Resend, depois EMAIL-PROVIDER)
 
 ---
 

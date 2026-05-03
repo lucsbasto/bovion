@@ -51,7 +51,7 @@ Repositório vazio. Antes de qualquer feature de negócio (animais, lotes, finan
 3. WHEN dev executa `pnpm db:push` THEN Drizzle Kit SHALL aplicar schema completo no Postgres local
 4. WHEN dev executa `pnpm dev` THEN Next.js SHALL servir em `http://localhost:3000` com landing placeholder visível
 5. WHEN dev abre `localhost:3000` THEN landing SHALL exibir "Bovion — Em construção" + botão "Health check" que chama `/api/health`
-6. WHEN README é seguido por novo dev THEN setup SHALL completar em ≤5min em máquina com Node 22 + Docker instalados
+6. WHEN README é seguido por novo dev THEN setup SHALL completar em ≤5min em máquina com Node 24 + Docker instalados
 
 **Independent Test**: `rm -rf node_modules && pnpm install && docker compose up -d && pnpm db:push && pnpm dev` → abrir browser → ver landing.
 
@@ -94,21 +94,21 @@ Repositório vazio. Antes de qualquer feature de negócio (animais, lotes, finan
 
 ---
 
-### P1: BOOT-04 — Email foundation (Resend + React Email) ⭐ MVP
+### P1: BOOT-04 — Email foundation (console-only stub + React Email preview) ⭐ MVP
 
-**User Story**: Como desenvolvedor, quero wrapper de envio de email pronto e template base renderizável para que specs AUTH-003 (reset) e AUTH-004 (verify) só precisem chamar `sendEmail()`.
+**User Story**: Como desenvolvedor, quero wrapper `sendEmail` com interface estável + templates React Email previewáveis localmente para que specs AUTH-003/004 e MEMBER (M1) chamem `sendEmail()` sem se importar com provider. Resend SDK + DNS verify entram só em **M6 Go-Live**.
 
-**Why P1**: Reset/verify de email são P1 da AUTH; sem infra de email, M1 trava.
+**Why P1 (sem Resend)**: Interface do wrapper precisa estar travada antes de M1 pra Better Auth `sendResetPassword`/`sendVerificationEmail` poderem ser plugados. Provider real (Resend) é decisão M6 — pré-MVP toda comunicação fica em console (dev/preview/prod), aceitável pq usuários pré-MVP são internos.
 
 **Acceptance Criteria**:
-1. WHEN dev importa `sendEmail` de `@bovion/emails` THEN função SHALL aceitar `{ to, subject, react }` e retornar resposta da Resend
-2. WHEN `sendEmail` é chamado em dev sem `RESEND_API_KEY` THEN log SHALL imprimir email no console (modo dev) sem falhar
-3. WHEN `RESEND_API_KEY` está presente THEN email SHALL ser enviado via Resend com `from='no-reply@bovion.com.br'`
-4. WHEN template `WelcomeEmail` é renderizado THEN ele SHALL produzir HTML válido + texto plain via React Email
-5. WHEN dev roda `pnpm --filter @bovion/emails preview` THEN React Email preview server SHALL abrir em `localhost:3001` listando templates
-6. WHEN domínio `bovion.com.br` é configurado em Resend THEN SPF + DKIM SHALL estar verificados (gate: prod-only, dev usa sandbox)
+1. WHEN dev importa `sendEmail` de `@bovion/emails` THEN função SHALL aceitar `{ to, subject, react?, text?, html? }` e retornar `{ id: string }`
+2. WHEN `sendEmail` é chamado em qualquer ambiente THEN ele SHALL imprimir payload formatado em `console.info` e retornar `{ id: 'console-noop-<uuid>' }` sem throw
+3. WHEN template `WelcomeEmail` é renderizado THEN ele SHALL produzir HTML válido via `@react-email/components`
+4. WHEN dev roda `pnpm --filter @bovion/emails preview` THEN `react-email` preview server SHALL abrir em `localhost:3001` listando templates
+5. WHEN Better Auth chama `sendResetPassword`/`sendVerificationEmail` THEN handler SHALL chamar `sendEmail()` (stub) e Better Auth SHALL prosseguir sem erro
+6. **Out of M0/M1-M5:** Resend SDK install, `RESEND_API_KEY` env, SPF/DKIM em `bovion.com.br`, swap stub → Resend backend — tudo deferred pra **M6 BOOT-XX-EMAIL-PROVIDER** spec.
 
-**Independent Test**: `node -e "import('./packages/emails/dist/send.js').then(m => m.sendEmail({to:'test@test.com',subject:'hi',react: WelcomeEmail({name:'X'})}))"` → log do email no console em dev.
+**Independent Test**: `pnpm --filter @bovion/emails exec tsx -e "import('./send').then(m => m.sendEmail({to:'test@test.com',subject:'hi',text:'world'}))"` → vê payload formatado no console + retorna `{ id: 'console-noop-...' }`.
 
 ---
 
@@ -121,7 +121,7 @@ Repositório vazio. Antes de qualquer feature de negócio (animais, lotes, finan
 **Acceptance Criteria**:
 1. WHEN repo é conectado a Vercel project `bovion` THEN preview deploy SHALL ser criado em todo PR
 2. WHEN PR é mergeado em `main` THEN prod deploy SHALL rodar e atualizar `bovion.com.br` em <5min
-3. WHEN env vars são lidas pela Vercel THEN sistema SHALL exigir: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `RESEND_API_KEY`, `APP_URL`, `NODE_ENV`
+3. WHEN env vars são lidas pela Vercel THEN sistema SHALL exigir: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `APP_URL`, `NODE_ENV`. *(`RESEND_API_KEY` adicionado em M6 quando Resend integrar.)*
 4. WHEN domínio `bovion.com.br` é configurado THEN DNS SHALL ter `A`/`CNAME` apontando pra Vercel + SSL ativo (Let's Encrypt automático Vercel)
 5. WHEN `www.bovion.com.br` é acessado THEN sistema SHALL redirecionar 301 pra `bovion.com.br` (ou vice-versa — decidir na execução, default: apex)
 6. WHEN env var crítica está ausente em prod THEN build SHALL falhar via validação zod no `server/env.ts`
@@ -222,7 +222,7 @@ Repositório vazio. Antes de qualquer feature de negócio (animais, lotes, finan
 
 ## Success Criteria
 
-- [ ] Setup local em <5min em máquina nova (Node 22 + Docker pré-instalados)
+- [ ] Setup local em <5min em máquina nova (Node 24 + Docker pré-instalados)
 - [ ] PR aberto → preview deploy verde em <5min
 - [ ] Push em main → prod deploy em `bovion.com.br` em <5min
 - [ ] CI bloqueia PR quebrado (lint, types, build, migrations)
@@ -242,7 +242,7 @@ Repositório vazio. Antes de qualquer feature de negócio (animais, lotes, finan
 | 4 | Domínio em M0 | **Sim** — `bovion.com.br` (já comprado) |
 | 5 | Lint stack | **Biome only** (sem ESLint + Prettier) |
 | 6 | Health endpoint em M0 | **Sim** (`/api/health` toca DB) |
-| 7 | Node version | Node 22 LTS |
+| 7 | Node version | Node 24 (current, Vercel-supported) |
 | 8 | DB version | Postgres 16 |
 | 9 | TS strict | `strict + noUncheckedIndexedAccess + noImplicitOverride` |
 | 10 | Vercel tier no MVP | Hobby ($0); Pro ($20/mês) gate em M6 antes de comercial |

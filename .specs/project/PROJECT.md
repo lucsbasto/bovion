@@ -16,12 +16,12 @@
 ## Tech Stack
 
 **Core:**
-- Framework: **Next.js 15 (App Router) full-stack** — web + API em uma só app
+- Framework: **Next.js 16 (App Router) full-stack** — web + API em uma só app
 - Language: TypeScript
 - Database: PostgreSQL via Supabase (cloud free tier + Docker local porta 5433)
 - ORM: **Drizzle** (leve, serverless-friendly, migrations SQL-first)
 - Auth: **Better Auth** (session cookie HttpOnly + tabela `sessions` Postgres via Drizzle adapter, plugin `organization` para multi-tenant)
-- Email: **Resend** (free 100/dia, 3.000/mês)
+- Email: **Console-only stub pré-MVP** (`packages/emails`); **Resend** integrado só em M6 Go-Live (free 100/dia, 3.000/mês)
 - Cron: **Vercel Cron Jobs** (Hobby: 2 jobs daily; suficiente pra excedente + cleanup)
 - Hospedagem: **Vercel Hobby** (MVP) → **Vercel Pro $20/mês** quando lançar comercial
 

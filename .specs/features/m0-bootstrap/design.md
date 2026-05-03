@@ -64,7 +64,7 @@ Repo bootstrap — sem código pré-existente. Toda escolha é greenfield.
 | Better Auth schema  | CLI `npx @better-auth/cli@latest generate --output packages/db/schema/auth.ts`    |
 | Drizzle ↔ Postgres  | `drizzle-orm/node-postgres` com `pg.Pool({ connectionString: DATABASE_URL })`      |
 | Better Auth ↔ Next  | `toNextJsHandler(auth)` em `app/api/auth/[...all]/route.ts`                        |
-| Resend ↔ React Email| `resend.emails.send({ react: <Component /> })` (Resend renderiza internamente)    |
+| Resend ↔ React Email| **DEFERRED M6.** M0..M5 usa stub `console.info`. Quando integrar: `resend.emails.send({ react: <Component /> })`. |
 | Vercel ↔ GitHub     | Vercel app GitHub integration (auto preview + prod)                                |
 
 ---
@@ -99,10 +99,11 @@ Repo bootstrap — sem código pré-existente. Toda escolha é greenfield.
     database: drizzleAdapter(db, { provider: "pg" }),
     emailAndPassword: {
       enabled: true,
-      requireEmailVerification: true,
+      requireEmailVerification: false, // M0..M5 stub-only emails; M6 flips true after Resend
       minPasswordLength: 8,
       autoSignIn: false,
-      sendResetPassword: async ({ user, url, token }) => {
+      sendResetPassword: async ({ user, url }) => {
+        // M0..M5: payload cai no console.info via sendEmail stub
         void sendEmail({
           to: user.email,
           subject: "Redefinir sua senha — Bovion",
@@ -119,7 +120,7 @@ Repo bootstrap — sem código pré-existente. Toda escolha é greenfield.
           react: VerifyEmail({ name: user.name, url }),
         });
       },
-      sendOnSignUp: true,
+      sendOnSignUp: false, // M6 flips true
       autoSignInAfterVerification: true,
     },
     session: {
@@ -153,49 +154,50 @@ Repo bootstrap — sem código pré-existente. Toda escolha é greenfield.
   import { Pool } from "pg";
   import * as schema from "./schema";
 
+  // Drizzle 0.35+ preferred client form: drizzle({ client, schema })
+  // Old `drizzle(pool, { schema })` is deprecated but still works until v1.
   export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-  export const db = drizzle(pool, { schema });
+  export const db = drizzle({ client: pool, schema });
   export * from "./schema";
   export type DB = typeof db;
   ```
 
-### Email Wrapper (`@bovion/emails`)
+### Email Wrapper (`@bovion/emails`) — console-only stub em M0..M5
 
-- **Purpose**: Único ponto de envio. Em dev sem `RESEND_API_KEY` → log no console (não falha). Em prod → Resend.
+- **Purpose**: Interface estável `sendEmail()` chamada por Better Auth + Server Actions. Backend é console-only até **M6 Go-Live** (Resend SDK + DNS DKIM/SPF entram lá). Pré-MVP usuários são internos — emails reais não são bloqueador de feature.
 - **Location**: `packages/emails/src/send.ts`
 - **Interfaces**:
-  - `sendEmail({ to, subject, react }): Promise<{ id?: string; error?: Error }>`
-- **Dependencies**: `resend`, `@react-email/components`, templates `WelcomeEmail`, `ResetPasswordEmail`, `VerifyEmail`
-- **Reuses**: `RESEND_API_KEY`, `EMAIL_FROM` (default `no-reply@bovion.com.br`)
-- **Shape**:
+  - `sendEmail({ to, subject, react?, text?, html? }): Promise<{ id: string }>`
+- **Dependencies (M0..M5)**: `@react-email/components`, `react-email` (dev — preview server). **Sem `resend` SDK.**
+- **Reuses**: nenhum env var em M0..M5 (sem `RESEND_API_KEY`).
+- **Shape (M0)**:
   ```ts
   // packages/emails/src/send.ts
-  import { Resend } from "resend";
   import type { ReactElement } from "react";
+  import { randomUUID } from "node:crypto";
 
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM ?? "Bovion <no-reply@bovion.com.br>";
-  const resend = apiKey ? new Resend(apiKey) : null;
-
-  export async function sendEmail(params: {
-    to: string;
+  type SendInput = {
+    to: string | string[];
     subject: string;
-    react: ReactElement;
-  }) {
-    if (!resend) {
-      console.info("[email:dev]", { to: params.to, subject: params.subject });
-      return { id: "dev-noop" };
-    }
-    const { data, error } = await resend.emails.send({
-      from,
-      to: [params.to],
-      subject: params.subject,
-      react: params.react,
-    });
-    if (error) console.error("[email:error]", error);
-    return { id: data?.id, error: error ?? undefined };
+    react?: ReactElement;
+    text?: string;
+    html?: string;
+  };
+
+  export async function sendEmail(input: SendInput): Promise<{ id: string }> {
+    const id = `console-noop-${randomUUID()}`;
+    console.info("[email:stub]", JSON.stringify({
+      id,
+      to: input.to,
+      subject: input.subject,
+      hasReact: !!input.react,
+      text: input.text,
+      html: input.html,
+    }, null, 2));
+    return { id };
   }
   ```
+- **M6 swap (deferred spec):** instalar `resend`, adicionar `RESEND_API_KEY` + `EMAIL_FROM` env, swap stub por chamada `resend.emails.send({ from, to, subject, react })`. Interface pública não muda — zero impacto em callers.
 
 ### Health Endpoint
 
@@ -247,8 +249,8 @@ Repo bootstrap — sem código pré-existente. Toda escolha é greenfield.
     BETTER_AUTH_SECRET: z.string().min(32),
     BETTER_AUTH_URL: z.string().url(),
     APP_URL: z.string().url(),
-    RESEND_API_KEY: z.string().optional(),
-    EMAIL_FROM: z.string().default("Bovion <no-reply@bovion.com.br>"),
+    // RESEND_API_KEY + EMAIL_FROM removidos — entram em M6 spec EMAIL-PROVIDER
+    // Pré-MVP sendEmail é stub console-only. Sem env vars relacionadas.
     GIT_COMMIT_SHA: z.string().optional(),
     VERCEL_GIT_COMMIT_SHA: z.string().optional(),
   });
@@ -418,8 +420,8 @@ bovion/
 {
   "name": "bovion",
   "private": true,
-  "packageManager": "pnpm@9.12.0",
-  "engines": { "node": ">=22.0.0" },
+  "packageManager": "pnpm@10.33.2",
+  "engines": { "node": ">=24.0.0" },
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
@@ -436,11 +438,11 @@ bovion/
     "prepare": "husky"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.0.0",
-    "turbo": "^2.5.0",
-    "typescript": "^5.6.0",
-    "husky": "^9.1.0",
-    "lint-staged": "^15.2.0"
+    "@biomejs/biome": "^2.4.14",
+    "turbo": "^2.9.7",
+    "typescript": "^6.0.3",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,json,md}": ["biome check --write --no-errors-on-unmatched"]
@@ -612,14 +614,14 @@ export default defineConfig({
     "auth:generate": "better-auth generate --output ./src/schema/auth.ts --config ../../apps/web/server/auth.ts --yes"
   },
   "dependencies": {
-    "drizzle-orm": "^0.36.0",
-    "pg": "^8.13.0"
+    "drizzle-orm": "^0.45.2",
+    "pg": "^8.20.0"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.28.0",
+    "drizzle-kit": "^0.31.10",
     "@types/pg": "^8.11.0",
-    "tsx": "^4.19.0",
-    "@better-auth/cli": "^1.3.0"
+    "tsx": "^4.21.0",
+    "@better-auth/cli": "^1.6.9"
   }
 }
 ```
@@ -737,8 +739,8 @@ jobs:
 | `DATABASE_URL` ausente                     | `env.ts` `safeParse` falha no import → throw                          | Boot falha; build/dev nunca sobe           |
 | `BETTER_AUTH_SECRET` ausente               | idem (mín 32 chars zod)                                               | idem                                       |
 | Postgres down em runtime                   | `/api/health` retorna 503 com mensagem; outras rotas 500              | Health monitoring alerta                   |
-| `RESEND_API_KEY` ausente em dev            | `sendEmail` log no console + retorna `{ id: 'dev-noop' }`              | Dev funciona offline                        |
-| `RESEND_API_KEY` ausente em prod           | log error; retorna error sem throw                                     | Email não enviado (falha silenciosa — M1 adiciona retry) |
+| `sendEmail` chamado em qualquer ambiente   | Stub console-only — sempre `console.info` payload + retorna `{ id: 'console-noop-<uuid>' }`. M0..M5. | Dev/preview/prod = mesmo comportamento até M6 |
+| Resend swap (M6)                            | M6 EMAIL-PROVIDER spec instala SDK + env; sem `RESEND_API_KEY` em prod = build fail via zod | Bloqueia deploy M6+ sem provider |
 | Migration conflict (duas branches)         | drizzle-kit gera arquivos NNNN_*.sql; merge conflict explícito         | Resolver renumerando arquivo manualmente   |
 | Better Auth schema drift entre versões     | spec futura (BOOT-09) — fora M0                                        | —                                          |
 | CI sem secrets                             | env definido no workflow + GitHub repo secrets em jobs prod-only       | Falha clara no step                        |
@@ -775,19 +777,47 @@ jobs:
 
 ---
 
-## Open Questions (resolver antes de Tasks)
+## Open Questions — RESOLVED 2026-05-03
 
-1. Better Auth `modelName` plural (`users` vs `user`)? **Default singular OK em M0**; renomear em M1 se necessário.
-2. Quem dispara `auth:generate` em CI? **Não rodar em CI**; arquivo gerado é commitado. CI só valida lint/types.
-3. Seed M0 cria `organization + member + farm`? **Sim, mínimo viável** pra `db:seed` não falhar em rota gated futura.
-4. `EMAIL_FROM` no `.env.example` deve ser `onboarding@resend.dev` (sandbox) ou `no-reply@bovion.com.br` (gate prod)? **Sandbox em dev, prod-domain em prod env**.
+1. **modelName plural vs singular** → **PLURAL** (`users`, `sessions`, `accounts`, `verifications`, `organizations`, `members`, `invitations`). *Why:* alinha com tabelas custom Bovion (`farms`, `farm_settings`). Config em `auth.ts` via `user: { modelName: 'users' }` + plugin `organization({ schema: { organization: { modelName: 'organizations' }, ... } })`.
+2. **`auth:generate` em CI** → **NÃO rodar em CI**. Schema commitado é fonte de verdade. Dev roda `pnpm auth:generate` manualmente após bump Better Auth. Drift-check opcional (deferred) só se aparecer bug real.
+3. **Seed M0 mínimo** → **SIM**: 1 user + 1 organization + 1 member(owner) + 1 farm + 1 farm_settings(default kg=30). Senha hash via `auth.api.signUpEmail` (não reproduzir scrypt). Permite navegar app local sem UI signup (que só vem M1).
+4. **EMAIL_FROM / Resend** → **DEFERRED → M6 Go-Live (spec EMAIL-PROVIDER)**. M0..M5 wrapper `sendEmail` é console-only stub (sem provider, sem env vars de email). React Email templates ficam disponíveis pra preview local. Decisão original (3 modos sandbox/prod) volta a valer quando M6 ativar Resend.
 
 ---
 
-## Verification Plan (gate Design → Tasks)
+## Verification Plan — DONE 2026-05-03
 
-- [ ] Rodar `npx better-auth generate --config ./apps/web/server/auth.ts --output /tmp/auth.ts --yes` localmente pra confirmar schema gerado bate com tabelas listadas
-- [ ] Confirmar `drizzle-kit` v0.28+ aceita `defineConfig` shape acima
-- [ ] Confirmar Resend `react` prop renderiza React Email components sem helper extra
-- [ ] Confirmar GitHub Actions postgres service container expõe `localhost:5432` no step (não `localhost:5433`)
-- [ ] Validar Vercel `ignoreCommand` syntax (algumas docs preferem array em vez de string)
+- [x] **Better Auth CLI schema** — Docs Context7 confirmam tabelas geradas: `user`, `session`, `account`, `verification` (default singular) + plugin `organization` adiciona `organization`, `member`, `invitation`. Design.md lista exato. Q1 override pra plural via `modelName`.
+- [x] **drizzle-kit `defineConfig`** — Shape `{ dialect: 'postgresql', schema, out, dbCredentials: { url }, strict, verbose }` confirmado em changelog 0.24+ e válido até latest 0.31.10.
+- [x] **Resend `react` prop direto** — Confirmado em docs Resend v6 e `resend-examples`: `react: WelcomeEmail({ name })` é forma canônica. Sem helper `React.render` extra. Resend SDK renderiza internamente.
+- [x] **GitHub Actions Postgres port** — `ports: ["5432:5432"]` (host:container) + `DATABASE_URL=...@localhost:5432/...` correto per docs GH Actions service containers.
+- [x] **Vercel `ignoreCommand`** — Type `string` confirmado (não array). Design.md sintaxe válida.
+
+---
+
+## Pinned Latest Versions — 2026-05-03
+
+> Mandate: usar sempre latest npm. Verificado via `npm view <pkg> version`.
+
+| Package | Version | Major bump notes |
+|---------|---------|------------------|
+| next | `^16.2.4` | **Bump 15 → 16.** Async params já era em 15; Next 16 só *removeu* sync compat. `/api/health` sem dynamic params, OK. Rotas futuras devem usar `await params`. |
+| react / react-dom | `^19.2.5` | Mantido — Next 16 ainda em React 19. |
+| typescript | `^6.0.3` | TS 6 — flags `strict`, `noUncheckedIndexedAccess`, `noImplicitOverride`, `verbatimModuleSyntax` ainda válidos. |
+| @biomejs/biome | `^2.4.14` | Minor bump dentro de v2 — config schema 2.0 OK. |
+| turbo | `^2.9.7` | Schema `tasks` (não `pipeline`) mantido. |
+| drizzle-orm | `^0.45.2` | Pre-1.0; `drizzle(pool)` deprecated (ainda funciona); preferir `drizzle({ client: pool, schema })` — atualizado em `client.ts` acima. |
+| drizzle-kit | `^0.31.10` | `defineConfig` shape inalterado. |
+| pg | `^8.20.0` | OK |
+| @types/pg | `^8.11.0` | OK |
+| better-auth | `^1.6.9` | API estável; `drizzleAdapter`, `organization` plugin, `toNextJsHandler`, `nextCookies` inalterados. |
+| @better-auth/cli | `^1.6.9` | `auth generate` igual. |
+| resend | **DEFERRED → M6** | Install + DNS DKIM/SPF em `bovion.com.br` só no Go-Live. Pré-MVP `sendEmail` é console-only stub. |
+| @react-email/components | `^1.0.12` | v1 estável. Templates previewáveis sem provider. |
+| react-email (dev) | `^4.0.0` | Preview server `email dev --port 3001` OK. |
+| zod | `^4.4.2` | **Bump 3 → 4.** `safeParse`, `.object`, `.string()`, `.url()`, `.enum`, `.default` inalterados em uso M0. |
+| tsx | `^4.21.0` | Migrate runner OK. |
+| husky | `^9.1.7` | OK |
+| lint-staged | `^16.4.0` | **Bump 15 → 16.** Config `*.{ts,tsx,...}: ["biome check --write ..."]` formato igual. |
+| @vercel/config | n/a | `vercel.json` schema mantido. |
