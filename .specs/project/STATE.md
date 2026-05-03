@@ -1,6 +1,6 @@
 # State
 
-**Updated:** 2026-05-02
+**Updated:** 2026-05-02 (handoff: reiniciar sessão pra ativar Context7 MCP, depois retomar design M0)
 
 ## Decisions
 
@@ -24,7 +24,43 @@
 
 ## Blockers
 
-(none)
+(none — pendência ativa: design M0)
+
+## Session Handoff (2026-05-02 fim)
+
+**Última ação:** Push inicial em `lucsbasto/bovion@562d756` (main). Context7 MCP adicionado em `~/.claude.json` (escopo user) — requer restart de sessão pra ativar.
+
+**Próximo passo ao reabrir Claude Code neste diretório:**
+1. Confirmar Context7 ativo: `mcp__context7__resolve-library-id "better-auth"` deve responder
+2. Retomar design M0: ler `.specs/features/m0-bootstrap/spec.md` + STATE.md + PROJECT.md + ROADMAP.md
+3. Gerar `.specs/features/m0-bootstrap/design.md` cobrindo:
+   - Arquitetura (mermaid: monorepo + Vercel + Supabase + Resend + GitHub Actions)
+   - Estrutura de diretórios definitiva (`apps/web`, `packages/db`, `packages/emails`)
+   - Schema Drizzle completo: Better Auth tables (users/sessions/accounts/verifications/organizations/members/invitations) + custom Bovion tables (farms, farm_settings esqueleto)
+   - Config files verbatim: `turbo.json` (top-level `tasks` key), `drizzle.config.ts`, `vercel.json` (crons + redirects), `docker-compose.postgres.yml`, `.github/workflows/ci.yml`, `biome.json`, `tsconfig.json` strict
+   - Componentes: AuthModule (Better Auth instance + organization plugin + emailVerification/sendResetPassword via Resend wrapper), DB client, Email wrapper, Health endpoint, Env validator (zod)
+   - Tradeoffs registrados: por que `db:push` em dev e `db:migrate` em prod, por que cookieCache 5min, por que apex domain (não www)
+
+**Pesquisa já feita (WebFetch nesta sessão — usar Context7 pra refrescar):**
+- Better Auth installation + Drizzle adapter (`drizzleAdapter(db, { provider: 'pg' })`)
+- Better Auth route handler `/app/api/auth/[...all]/route.ts` via `toNextJsHandler(auth)`
+- Better Auth organization plugin (cria `organization`, `member`, `invitation`, estende `session` com `activeOrganizationId`)
+- Better Auth emailVerification/sendResetPassword config shape
+- Drizzle Kit commands: `push` (dev), `generate` (cria migration SQL), `migrate` (aplica em prod)
+- Turborepo `turbo.json` schema: top-level `tasks` (não `pipeline`), `dependsOn`, `outputs`, `cache`, `inputs`, `persistent`
+
+**Pendente verificar via Context7:**
+- Vercel Cron syntax (`vercel.json` `crons` array)
+- Next.js 15 App Router params shape (Promise<params>)
+- React Email + Resend latest API
+- Better Auth `databaseHooks.user.create.after` signature pra criar farm inicial automático em registro
+
+**Comandos pra retomar:**
+```
+cd /home/lucas/bovion
+claude
+# diga: "continuar design M0"
+```
 
 ## Lessons
 
