@@ -1,7 +1,7 @@
 # Product Marketing Context — Bovion
 
 *Last updated: 2026-05-03*
-*Gerado via: product-marketing-context skill (DRAFT mode — sintetizado dos specs internos)*
+*Gerado via: product-marketing-context skill (DRAFT mode — sintetizado dos specs internos; 12 itens [INFERRED] resolvidos em 2026-05-03 com defaults pragmáticos M0)*
 *Idioma: pt-BR (todo copy de marketing em pt-BR; código e variáveis em inglês)*
 
 ---
@@ -20,7 +20,7 @@ Software de gestão pecuária (gestão de rebanho + inteligência financeira). P
 **Product type:** SaaS multi-tenant, web-app (Next.js, responsivo).
 
 **Business model:**
-4 planos mensais por organização (Essencial R$ 49,90 / Gestão R$ 149,00 / Estratégico R$ 399,00 / Corporativo R$ 1.099,00) + cobrança de excedente de animais (~R$ 0,50–1,50/animal/mês acima do limite do plano). Trial gratuito de 14 dias. Sem contrato de fidelidade. [INFERRED — valores finais de pricing precisam de confirmação do usuário antes do go-live]
+4 planos mensais por organização (valores em definição até M5 — não publicar em material externo). Cobrança de excedente de animais acima do limite do plano. Trial gratuito de 14 dias sem cartão de crédito. Sem contrato de fidelidade. [DRAFT INTERNO — pricing tentativo: Essencial R$ 49,90 / Gestão R$ 149,00 / Estratégico R$ 399,00 / Corporativo R$ 1.099,00 / excedente ~R$ 0,50–1,50/animal/mês; deferir publicação até validação M5]
 
 ---
 
@@ -59,8 +59,8 @@ Saber o custo real por arroba de cada lote e decidir com precisão quando vender
 |---------|-------|-------------|---------------------|-----------------------------|
 | **Pecuarista proprietário** | Dono da fazenda | Lucro líquido, timing de venda, custo/@  | Decisão de venda baseada em intuição ou preço spot; sem visão de custo real | Custo/@ em tempo real + simulador de dia ótimo de venda |
 | **Gestor de fazenda** | Gerente operacional | Controle diário de rebanho, saúde, ração | Dados em planilhas isoladas; sem visão integrada de saúde + financeiro | Tudo centralizado: pesagem, saúde, suplementação, financeiro |
-| **Consultor / Zootécnico** | Consultor externo | Dados precisos para recomendar manejo | Recebe informação fragmentada do cliente; perde tempo consolidando | Acesso viewer ao sistema do cliente; dados históricos exportáveis [INFERRED — exportação CSV no backlog, não no MVP] |
-| **Grupo pecuário (CFO)** | Gestor financeiro | Visão consolidada de múltiplas fazendas | Sem ferramenta que consolide P&L de operações distintas | Plano Corporativo: multi-fazenda, roles, billing centralizado [INFERRED — consolidação multi-fazenda é backlog pós-MVP] |
+| **Consultor / Zootécnico** | Consultor externo | Dados precisos para recomendar manejo | Recebe informação fragmentada do cliente; perde tempo consolidando | Acesso viewer ao sistema do cliente; dados históricos consultáveis na interface |
+| **Grupo pecuário (CFO)** | Gestor financeiro | Visão consolidada de múltiplas fazendas | Sem ferramenta que consolide P&L de operações distintas | Plano Corporativo: multi-fazenda, roles, billing centralizado [ROADMAP — consolidação P&L cross-fazenda planejada para M2/M3; não vender Corporativo sem a feature pronta] |
 
 ---
 
@@ -76,7 +76,7 @@ O pecuarista de corte opera com alto capital imobilizado (R$ 200–800/@ compra)
 - **Planilhas de consultores:** dependem do consultor para interpretar; não estão disponíveis 24/7 para decisão rápida.
 
 **O que custa ao pecuarista:**
-- Vender no momento errado = R$ 20–80/@ de margem perdida por animal [INFERRED — estimar com base em volatilidade de mercado; validar com usuários reais]
+- Vender no momento errado significa perda relevante de margem por animal num mercado volátil — a diferença entre lote rentável e prejuízo costuma estar em poucos dias de timing.
 - Horas semanais consolidando dados manualmente
 - Saturação não detectada = perda de peso e custo de ração desperdiçado
 - Decisão de compra/venda sem embasamento = risco financeiro em operações de R$ 500k+
@@ -90,7 +90,7 @@ O pecuarista de corte opera com alto capital imobilizado (R$ 200–800/@ compra)
 
 **Diretos (mesma solução, mesmo problema):**
 - **SoftFarm / AgroSistemas / Pecege:** sistemas desktop ou web legados, focados em controle zootécnico, sem inteligência financeira preditiva. Caros pra operações menores, UI ultrapassada.
-- **Planilhas Excel/Google personalizadas:** solução mais usada hoje. Problema: não escala, não integra, erro manual, sem simulação. [INFERRED — market share estimado; validar com pesquisa]
+- **Planilhas Excel/Google personalizadas:** hipótese de solução mais comum entre fazendas médias. Problema: não escala, não integra, erro manual, sem simulação. [HIPÓTESE — quantificar market share com pesquisa antes de afirmar publicamente]
 
 **Secundários (problema parecido, solução diferente):**
 - **Consultores zootécnicos com planilha própria:** entregam análise mensal, mas não dão acesso contínuo ao pecuarista.
@@ -127,9 +127,9 @@ Bovion fecha o ciclo dados → decisão no próprio produto. O pecuarista lança
 Elimina o tempo entre "ter os dados" e "tomar a decisão." Hoje esse ciclo leva dias (planilha manual) ou semanas (relatório do consultor). No Bovion, é em tempo real.
 
 **Por que clientes nos escolhem:**
-[INFERRED — sem dados de usuários reais ainda; hipótese a validar em M1/M6:]
+[HIPÓTESE — validar com beta M6:]
 - Primeiro produto que fecha dados operacionais + financeiros + simulação em uma interface só
-- Preço acessível para fazendas médias (R$ 49,90–149,00/mês vs ERPs R$ 500+/mês)
+- Preço acessível para fazendas médias vs ERPs enterprise
 - Onboarding sem friction: cadastra fazenda, importa animais, já vê dashboard
 
 ---
@@ -139,10 +139,10 @@ Elimina o tempo entre "ter os dados" e "tomar a decisão." Hoje esse ciclo leva 
 | Objeção | Resposta |
 |---------|----------|
 | "Já uso planilha, funciona pra mim." | Planilha não calcula GMD automaticamente, não alerta saturação, não simula o dia ótimo. O tempo que você gasta consolidando dados toda semana custa mais do que o plano. |
-| "Sistema rural é complicado demais, não vou usar." | Bovion tem UI de produto de tecnologia moderno (não de ERP dos anos 2000). Setup em minutos, sem instalação, sem treinamento formal. Trial de 14 dias sem cartão. [INFERRED — "sem cartão" a confirmar na política de billing] |
-| "Minha operação é pequena, não preciso de sistema." | Plano Essencial é para operações de até 100 animais. R$ 49,90/mês. Se você deixar de vender no momento errado mesmo uma vez, o sistema se paga. |
-| "Meus dados vão ficar na nuvem, é seguro?" | Multi-tenant estrito: seus dados são isolados, nenhum outro usuário acessa. Banco Postgres com backups automáticos (Supabase). Cookie de sessão HttpOnly seguro. [INFERRED — compliance LGPD a detalhar antes do go-live] |
-| "O preço vai aumentar depois que eu entrar." | [INFERRED — política de lock-in de preço a definir; sugestão: grandfathering pra early adopters] |
+| "Sistema rural é complicado demais, não vou usar." | Bovion tem UI de produto de tecnologia moderno (não de ERP dos anos 2000). Setup em minutos, sem instalação, sem treinamento formal. Trial de 14 dias sem cartão de crédito. |
+| "Minha operação é pequena, não preciso de sistema." | Plano de entrada cobre fazendas de até 100 animais. Se você deixar de vender no momento errado mesmo uma vez, o sistema se paga. |
+| "Meus dados vão ficar na nuvem, é seguro?" | Multi-tenant estrito: seus dados são isolados, nenhum outro usuário acessa. Banco Postgres com backups automáticos (Supabase). Cookie de sessão HttpOnly seguro. [PLACEHOLDER — política de privacidade LGPD formal (privacy policy + DPA + processo DSR) a publicar antes do go-live M6; não afirmar compliance até documentação real existir] |
+| "O preço vai aumentar depois que eu entrar." | Política de early adopter: clientes do beta e os primeiros 100 pagantes têm o preço da assinatura travado por 12 meses. Qualquer reajuste após esse período é comunicado com 60 dias de antecedência. |
 
 **Anti-persona (mau fit):**
 - Pecuarista de leite (Bovion é bovinos de **corte** — GMD e custo/@ são métricas de engorda, não de lactação)
@@ -183,7 +183,7 @@ Elimina o tempo entre "ter os dados" e "tomar a decisão." Hoje esse ciclo leva 
 
 ## Customer Language
 
-**Como descrevem o problema (hipótese — a validar com entrevistas reais):** [INFERRED]
+**Como descrevem o problema (hipótese — a validar com entrevistas M6):**
 - "Nunca sei o custo exato da minha arroba."
 - "Fico no chute na hora de vender."
 - "Minha planilha vive quebrando."
@@ -191,7 +191,7 @@ Elimina o tempo entre "ter os dados" e "tomar a decisão." Hoje esse ciclo leva 
 - "Quando o consultor entrega o relatório, o mercado já mudou."
 - "Sei que tô deixando dinheiro na mesa, mas não sei quanto."
 
-**Como descrevem o produto ideal (hipótese):** [INFERRED]
+**Como descrevem o produto ideal (hipótese — a validar M6):**
 - "Queria ver tudo numa tela só."
 - "Um sistema que me diga quando é hora de vender."
 - "Igual o que os grandes grupos usam, mas acessível pra mim."
@@ -328,14 +328,14 @@ Profissional, direto, baseado em dados. B2B fintech-grade aplicado à pecuária.
 
 ## Proof Points
 
-**Métricas do produto (a coletar em beta/M6):** [INFERRED — ainda sem usuários reais; preencher com dados reais antes do go-live]
+**Métricas do produto (a coletar em beta M6 — placeholders, não publicar fabricado):**
 - "X pecuaristas economizam Y horas/semana em consolidação de dados"
 - "Z% de redução no tempo entre pesagem e decisão de venda"
 - Simulações rodadas / semana (engagement metric)
 
-**Clientes / logos:** [INFERRED — nenhum ainda (M0); seção a preencher após beta M6]
+**Clientes / logos:** Seção omitida da landing M0–M5. Publicar após beta M6 (mínimo 5 clientes pagantes com consentimento explícito de uso de marca).
 
-**Testimonials:** [INFERRED — nenhum ainda; coletar nos primeiros 30 usuários beta]
+**Testimonials:** Seção omitida da landing M0–M5. Coletar nos primeiros 30 usuários beta com release de uso assinado.
 
 **Value themes e evidências disponíveis:**
 | Tema | Evidência atual | A coletar |
@@ -343,14 +343,14 @@ Profissional, direto, baseado em dados. B2B fintech-grade aplicado à pecuária.
 | Precisão financeira | Algoritmo de custo/@ + simulador 0–120 dias auditável no código | Casos reais de decisões de venda |
 | Facilidade de uso | UI baseada em referências Stripe/Linear; 13 telas mapeadas | NPS beta |
 | Confiabilidade | Multi-tenant estrito com testes E2E obrigatórios; Better Auth 28k stars | Uptime real pós-deploy |
-| Custo-benefício | Plano Essencial R$ 49,90 vs ERP R$ 500+/mês | Comparativo de custo-benefício formal |
+| Custo-benefício | Plano de entrada acessível vs ERPs rurais legados | Comparativo de custo-benefício formal |
 
 ---
 
 ## Goals
 
 **Business goal:**
-Validar product-market fit com primeiros 50 clientes pagantes em fazendas de bovinos de corte no Brasil. Meta M6 go-live: 3 clientes pagos no plano Gestão ou superior.
+Validar product-market fit com primeiros clientes pagantes em fazendas de bovinos de corte no Brasil.
 
 **Conversion action primária:**
 Cadastro no trial de 14 dias (CTA "Abrir o app" → tela de registro → fazenda criada → primeiro animal cadastrado).
@@ -358,38 +358,45 @@ Cadastro no trial de 14 dias (CTA "Abrir o app" → tela de registro → fazenda
 **Conversion action secundária:**
 Upgrade do trial para plano pago antes do vencimento dos 14 dias.
 
-**Current metrics:** [INFERRED — pré-lançamento; nenhum dado real ainda]
-- Usuários pagantes: 0 (M0)
-- MRR: R$ 0 (M0)
-- Trials ativos: 0 (M0)
-- Meta M6: primeiros 3 pagantes, MRR > R$ 450/mês
+**Current metrics:** Pré-lançamento — todas as métricas em zero (M0). Targets internos de MRR e clientes pagantes ficam em `.specs/project/ROADMAP.md` e `.specs/project/STATE.md`, não neste documento de marketing.
 
 ---
 
 ## Notes for Downstream Skills
 
-Esta seção é meta-informação para outros skills que consumem este documento:
+Esta seção é meta-informação para outros skills que consomem este documento:
 
-- **copywriting / landing pages:** usar mensagem principal + hero headline da seção Key Messages. Tom: profissional, direto, sem hiperbole. Sempre pt-BR.
+- **copywriting / landing pages:** usar mensagem principal + hero headline da seção Key Messages. Tom: profissional, direto, sem hiperbole. Sempre pt-BR. Não publicar valores de pricing até validação M5.
 - **seo:** keywords primárias: "software gestão pecuária", "sistema para pecuarista", "gestão rebanho gado de corte", "custo arroba calculadora", "quando vender gado". Keywords secundárias: "GMD bovino", "simulador venda gado", "planilha pecuária substituição".
 - **ad-creative:** use UC-01 e UC-03 como creative concepts. Headline anchor: "Você sabe quando vender?" Dor anchor: "Planilha quebrada na hora de fechar negócio."
 - **content-strategy:** topo de funil = conteúdo educativo sobre custo/@ e GMD (quem busca calcular custo de arroba tem alta intenção). Fundo de funil = comparativo Bovion vs planilha.
 - **email-sequence:** sequência de onboarding deve guiar usuário do cadastro → primeiro animal → primeiro lote → primeiro dashboard com KPIs → simulador. Cada email = um aha moment.
-- **pricing-strategy:** ancora no plano Gestão (R$ 149,00) como "mais popular". Essencial é entry point, Estratégico/Corporativo são upgrade goals. Simulador de cobrança na página de planos.
+- **pricing-strategy:** não comunicar valores externamente até M5. Internamente, ancora pretendida no plano Gestão como "mais popular"; Essencial entry point; Estratégico/Corporativo upgrade goals.
 
 ---
 
-## Items Marcados como [INFERRED] — Necessitam Confirmação do Usuário
+## Items [INFERRED] — Status de Resolução
 
-1. **Valores exatos de pricing** (R$ 49,90 / 149,00 / 399,00 / 1.099,00) — baseados no visual-brief billing.png; confirmar antes do go-live comercial
-2. **Trial sem cartão de crédito** — política a definir no spec BILLING
-3. **Estimativa de margem perdida por vender no momento errado** (R$ 20–80/@) — validar com dados de mercado real
-4. **Linguagem do cliente** (frases verbatim) — hipóteses; substituir por frases reais coletadas em entrevistas com pecuaristas antes do M6
-5. **Quota de mercado das planilhas Excel** — "solução mais usada" é hipótese razoável mas não validada com pesquisa
-6. **Grandfathering de preço para early adopters** — decisão de produto a tomar antes de lançar
-7. **Consolidação multi-fazenda (Corporativo)** — backlog pós-MVP; não prometer na landing
-8. **Exportação CSV/PDF** — backlog; não incluir em feature list antes de implementar
-9. **Conformidade LGPD** — a detalhar formalmente antes do go-live (política de privacidade + termos)
-10. **Métricas de prova social** (tempo economizado, % redução) — preencher com dados reais dos primeiros 20 clientes beta
-11. **Testimonials / logos** — nenhum disponível em M0; seção placeholder
-12. **Meta de MRR M6 (R$ 450/mês / 3 clientes)** — hipótese; ajustar com dados reais do beta
+Resolvidos em 2026-05-03 (defaults pragmáticos M0 confirmados pelo usuário):
+
+| # | Item | Resolução |
+|---|------|-----------|
+| 1 | Pricing values | DRAFT INTERNO; não publicar até validação M5 |
+| 2 | Trial sem cartão | Confirmado: 14 dias sem cartão de crédito |
+| 3 | Margem perdida (R$/@) | Número removido; descrição qualitativa |
+| 4 | Verbatims do cliente | Mantidos como hipótese explícita; validar com entrevistas M6 |
+| 5 | Market share das planilhas | Mantido como hipótese; quantificar antes de afirmar |
+| 6 | Grandfathering early adopter | Lock de 12 meses para beta + primeiros 100 pagantes |
+| 7 | Multi-fazenda Corporativo | Marcado como ROADMAP M2/M3; não vender Corporativo sem a feature |
+| 8 | Export CSV/PDF | Removido do material de marketing até shipping |
+| 9 | LGPD | Placeholder até M6; política formal antes do go-live |
+| 10 | Métricas de prova social | Placeholder; preencher com dados reais beta |
+| 11 | Testimonials / logos | Seção omitida da landing até beta M6 |
+| 12 | Meta MRR M6 | Movido para STATE.md / ROADMAP.md (interno, não marketing) |
+
+**Pendências persistentes (precisam ação fora deste doc):**
+- Coletar verbatims reais em entrevistas com pecuaristas (M6 beta)
+- Pesquisa Cepea/Esalq para quantificar custo de timing errado
+- Política de privacidade + DPA + processos DSR (engenharia + legal antes go-live)
+- Validação de pricing com willingness-to-pay (M5)
+- Atualizar ROADMAP.md confirmando consolidação multi-fazenda em M2/M3
