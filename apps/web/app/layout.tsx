@@ -1,9 +1,9 @@
-import type { ReactNode } from 'react';
-import './globals.css';
+import type { ReactNode } from "react";
+import "./globals.css";
 
 export const metadata = {
-  title: 'Bovion',
-  description: 'Plataforma SaaS de gestão pecuária e controle financeiro.',
+  title: "Bovion",
+  description: "Plataforma SaaS de gestão pecuária e controle financeiro.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
