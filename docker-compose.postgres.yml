@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: bovion-postgres
+    restart: unless-stopped
+    ports: ['5433:5432']
+    environment:
+      POSTGRES_USER: bovion
+      POSTGRES_PASSWORD: bovion
+      POSTGRES_DB: bovion
+    volumes:
+      - bovion-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U bovion -d bovion']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  bovion-pg-data:

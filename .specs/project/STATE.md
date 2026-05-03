@@ -31,7 +31,7 @@
 
 ## Blockers
 
-(none — pendência ativa: gerar tasks.md M0)
+- **Docker não instalado no host (2026-05-03):** `docker compose -f docker-compose.postgres.yml up -d` não pode rodar até user instalar Docker Desktop / Engine. Bloqueia verify runtime de BOOT-01-T04 (postgres healthcheck), BOOT-02-T05 (drizzle migrate local), BOOT-03-T03+ (auth route smoke test contra DB). Workaround: continuar com tasks que não tocam DB; docker fica blocker pra primeiro verify ponta-a-ponta. Install: `curl -fsSL https://get.docker.com | sh` (Linux) ou Docker Desktop (mac/win).
 
 ## Session Handoff (2026-05-03 fim)
 
