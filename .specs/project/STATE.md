@@ -2,6 +2,26 @@
 
 **Updated:** 2026-05-03 (M0 execução 18/32 tasks done — BOOT-01/02/04/08 completos, CI minimal verde, paused)
 
+## NEXT STEP
+
+> **Single source of truth pra "o que faço agora?".** Atualiza ao fim de cada task/sessão. Lê PRIMEIRO antes de qualquer trabalho.
+
+**Task:** Branch protection rule (manual) + BOOT-03-T01 (auth env validator + Better Auth install)
+
+**Por quê:** CI já roda verde mas main não exige `ci` check passing — qualquer push direto bypassa. BOOT-03 desbloqueia chain BOOT-07 (health) → BOOT-06-FULL (CI completa) → deploy.
+
+**Como começar:**
+1. Manual GitHub UI (~2min): repo → Settings → Branches → Add rule `main`: require PR + require `ci` status check + block force push
+2. Em paralelo, comando aqui:
+   ```
+   continuar M0 — spawn BOOT-03 executor
+   ```
+   Spawn 1 executor agent sonnet, isolation worktree, 4 tasks sequenciais (T01 env+install → T02 instance+org plugin → T03 catch-all route → T04 schema gen+seed real). Verify command per task. ~4 commits atomicos.
+
+**Bloqueador anterior:** Nenhum (Docker installed, CI verde, lock consolidado).
+
+**Após NEXT STEP done:** atualizar este bloco pra "BOOT-07-T01 health endpoint" (próxima dependência).
+
 ## Decisions
 
 - **2026-05-03 · Stack full-stack Next.js 16 (App Router):** Bump 15 → 16 (latest stable). Async params/cookies já era em 15; Next 16 removeu sync compat — sem código existente afetado em M0. Substitui Vite + Fastify + NestJS do PRD. *Why:* deploy único na Vercel, custo $0 no MVP, Server Components + Server Actions + Route Handlers cobrem CRUD com type-safety end-to-end, Vercel Cron resolve jobs scheduled. *Trade-off aceito:* perde DI/decorators NestJS, organiza em `server/modules/*` à mão.
