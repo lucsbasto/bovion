@@ -1,6 +1,6 @@
 # State
 
-**Updated:** 2026-05-02 (handoff: reiniciar sessão pra ativar Context7 MCP, depois retomar design M0)
+**Updated:** 2026-05-03 (M0 design.md gerado via Context7 MCP — pronto pra fase Tasks)
 
 ## Decisions
 
@@ -69,7 +69,7 @@ claude
 ## Todos
 
 - [x] M0: Spec escrita (`.specs/features/m0-bootstrap/spec.md`) — 8 requirements (6 P1 + 2 P2)
-- [ ] M0: Design phase (decompor BOOT-01..08 em arquitetura + componentes)
+- [x] M0: Design phase (`.specs/features/m0-bootstrap/design.md` — arquitetura mermaid + dir tree + Drizzle schema + configs verbatim verificados Context7 + componentes + tradeoffs)
 - [ ] M0: Tasks phase (atomic tasks com dependências)
 - [ ] M0: Execute BOOT-01 monorepo
 - [ ] M0: Execute BOOT-02 database

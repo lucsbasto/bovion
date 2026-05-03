@@ -2,7 +2,7 @@
 
 **Feature ID prefix:** `BOOT`
 **Milestone:** M0
-**Status:** Specifying
+**Status:** Designed (design.md committed; Tasks phase next)
 **Owner:** lucas (lucsbasto@gmail.com)
 **Created:** 2026-05-02
 
